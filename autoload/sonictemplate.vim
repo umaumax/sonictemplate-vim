@@ -205,40 +205,7 @@ function! sonictemplate#apply(name, mode, ...) abort
   let ft = ft != "" ? ft : "_"
   let c = join(readfile(f), "\n")
   let c = substitute(c, '{{_name_}}', expand('%:t:r:'), 'g')
-  let tmp = c
-  let mx = '{{_input_:\(.\{-}\)}}'
-  if !has_key(s:vars, ft)
-    let s:vars[ft] = {}
-  endif
-  let vars = []
-  while 1
-    let match = matchstr(tmp, mx)
-    if len(match) == 0
-      break
-    endif
-    let var = substitute(match, mx, '\1', 'ig')
-    if index(vars, var) == -1
-      call add(vars, var)
-    endif
-    let tmp = tmp[stridx(tmp, match) + len(match):]
-  endwhile
-  let gvars = has_key(g:, 'sonictemplate_vim_vars') && type(g:sonictemplate_vim_vars) == 4 ? g:sonictemplate_vim_vars : {}
-  for var in vars
-    if exists('V')
-      unlet V
-    endif
-    if has_key(gvars, &ft) && type(gvars[&ft]) == 4 && has_key(gvars[&ft], var)
-      let V = gvars[&ft][var]
-      if type(V) == 1 | let val = V | else | let val = string(V) | endif
-    elseif has_key(gvars, '_') && type(gvars['_']) == 4 && has_key(gvars['_'], var)
-      let V = gvars['_'][var]
-      if type(V) == 1 | let val = V | else | let val = string(V) | endif
-    else
-      let val = input(var . ": ")
-    endif
-    let c = substitute(c, '\V{{\(_input_\|_var_\):'.var.'}}', '\=val', 'g')
-    let s:vars[ft][var] = val
-  endfor
+  let c = s:parse_input(c, ft)
   let mx = '{{_define_:\([^:]\+\):\(.\{-}\)}}\s*'
   while 1
     let match = matchstr(c, mx)
@@ -335,6 +302,8 @@ function! sonictemplate#postfix()
       for i in range(1, 9)
         let c = substitute(c, '{{$' . i . '}}', ml[i], 'g')
       endfor
+      let ft = s:getopt('filetype')
+      let c = s:parse_input(c, ft)
       let indent = matchstr(line, '^\(\s*\)')
       if line !~ '^\s*$'
         let lhs = col('.') > 1 ? line[:col('.')-2] : ''
@@ -402,6 +371,46 @@ function! sonictemplate#load_postfix()
       endif
     endfor
   endfor
+endfunction
+
+function! s:parse_input(c, ft)
+  let ft=a:ft
+  let c=a:c
+  let tmp = c
+  let mx = '{{_input_:\(.\{-}\)}}'
+  if !has_key(s:vars, ft)
+    let s:vars[ft] = {}
+  endif
+  let vars = []
+  while 1
+    let match = matchstr(tmp, mx)
+    if len(match) == 0
+      break
+    endif
+    let var = substitute(match, mx, '\1', 'ig')
+    if index(vars, var) == -1
+      call add(vars, var)
+    endif
+    let tmp = tmp[stridx(tmp, match) + len(match):]
+  endwhile
+  let gvars = has_key(g:, 'sonictemplate_vim_vars') && type(g:sonictemplate_vim_vars) == 4 ? g:sonictemplate_vim_vars : {}
+  for var in vars
+    if exists('V')
+      unlet V
+    endif
+    if has_key(gvars, &ft) && type(gvars[&ft]) == 4 && has_key(gvars[&ft], var)
+      let V = gvars[&ft][var]
+      if type(V) == 1 | let val = V | else | let val = string(V) | endif
+    elseif has_key(gvars, '_') && type(gvars['_']) == 4 && has_key(gvars['_'], var)
+      let V = gvars['_'][var]
+      if type(V) == 1 | let val = V | else | let val = string(V) | endif
+    else
+      let val = input(var . ": ")
+    endif
+    let c = substitute(c, '\V{{\(_input_\|_var_\):'.var.'}}', '\=val', 'g')
+    let s:vars[ft][var] = val
+  endfor
+  return c
 endfunction
 
 let &cpo = s:save_cpo
