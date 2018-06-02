@@ -45,7 +45,7 @@ else
   exe "imap" g:sonictemplate_intelligent_key "<plug>(sonictemplate-intelligent)"
 endif
 
-inoremap <plug>(sonictemplate-postfix) <c-r>=sonictemplate#postfix()<cr>
+inoremap <plug>(sonictemplate-postfix) <c-o>:call sonictemplate#postfix()<cr>
 if get(g:, 'sonictemplate_postfix_key', '') == ''
   imap <unique> <c-y><c-b> <plug>(sonictemplate-postfix)
 else
