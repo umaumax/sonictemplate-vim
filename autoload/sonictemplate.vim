@@ -1,7 +1,7 @@
 "=============================================================================
 " sonictemplate.vim
 " Author: Yasuhiro Matsumoto <mattn.jp@gmail.com>
-" Last Change: 03-Sep-2013.
+" Last Change: 19-Jun-2018.
 
 let s:save_cpo = &cpo
 set cpo&vim
@@ -238,7 +238,7 @@ function! sonictemplate#apply(name, mode, ...) abort
     endif
     silent! %d _
     silent! put = c
-    silent! normal! ggdd
+    silent! normal! gg"_dd
   else
     if c[len(c)-1] == "\n"
       let c = c[:-2]
@@ -267,7 +267,7 @@ function! sonictemplate#apply(name, mode, ...) abort
         let c = substitute(c, "\t", repeat(' ', &shiftwidth), 'g')
       endif
       if line('.') < line('$')
-        silent! normal! dd
+        silent! normal! "_dd
       endif
       silent! put! =c
     endif
@@ -320,7 +320,7 @@ function! sonictemplate#postfix()
         endif
         call setline('.', line)
         if line('.') < line('$')
-          silent! normal! dd
+          silent! normal! "_dd
         endif
         silent! put! =c
       else
